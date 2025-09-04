@@ -11,8 +11,8 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     strategy:
-        matrix:
-          service: [ 'authService', 'chatService', 'messageService', 'userService' ]
+      matrix:
+        service: ['authService', 'chatService', 'messageService', 'userService']
 
     steps:
       - name: Checkout
@@ -36,10 +36,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-            context: ./${{ matrix.service }}
-            push: true
-            tags: |
-              your-docker-username/${{ matrix.service }}:dev
-              your-docker-username/${{ matrix.service }}:${{ github.sha }}
-            build-args: |
-              JAR_FILE=build/libs/*.jar
+          context: ./${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:dev
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+          build-args: |
+            JAR_FILE=build/libs/*.jar
