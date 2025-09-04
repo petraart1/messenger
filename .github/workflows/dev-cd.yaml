@@ -1,0 +1,156 @@
+name: develop cd deploy pipeline
+
+on:
+  workflow_run:
+    workflows: ["develop ci build pipeline"]
+    types: [completed]
+    branches: [dev]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Deploy to development server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USER }}
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          script: |
+            #!/bin/bash
+            echo "Starting deployment to dev server"
+            
+            cat > docker-compose-db.yml << 'EOF'
+            services:
+              auth-db:
+                image: 'postgres:16-alpine'
+                container_name: auth-db
+                environment:
+                  POSTGRES_DB: ${POSTGRES_DB}
+                  POSTGRES_USER: ${POSTGRES_USER}
+                  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+                ports:
+                  - "5432:5432"
+                volumes:
+                  - auth_db_data:/var/lib/postgresql/data:rw
+                healthcheck:
+                  test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+                  interval: 5s
+                  timeout: 3s
+                  retries: 3
+                networks:
+                  - app
+
+              chat-db:
+                image: 'postgres:16-alpine'
+                container_name: chat-db
+                environment:
+                  POSTGRES_DB: ${POSTGRES_DB}
+                  POSTGRES_USER: ${POSTGRES_USER}
+                  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+                ports:
+                  - "5433:5432"
+                volumes:
+                  - chat_db_data:/var/lib/postgresql/data:rw
+                healthcheck:
+                  test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+                  interval: 5s
+                  timeout: 3s
+                  retries: 3
+                networks:
+                  - app
+
+              message-db:
+                image: 'postgres:16-alpine'
+                container_name: message-db
+                environment:
+                  POSTGRES_DB: ${POSTGRES_DB}
+                  POSTGRES_USER: ${POSTGRES_USER}
+                  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+                ports:
+                  - "5434:5432"
+                volumes:
+                  - message_db_data:/var/lib/postgresql/data:rw
+                healthcheck:
+                  test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+                  interval: 5s
+                  timeout: 3s
+                  retries: 3
+                networks:
+                  - app
+
+              user-db:
+                image: 'postgres:16-alpine'
+                container_name: user-db
+                environment:
+                  POSTGRES_DB: ${POSTGRES_DB}
+                  POSTGRES_USER: ${POSTGRES_USER}
+                  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+                ports:
+                  - "5435:5432"
+                volumes:
+                  - user_db_data:/var/lib/postgresql/data:rw
+                healthcheck:
+                  test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+                  interval: 5s
+                  timeout: 3s
+                  retries: 3
+                networks:
+                  - app
+
+            volumes:
+              auth_db_data:
+              chat_db_data:
+              message_db_data:
+              user_db_data:
+            
+            networks:
+              app:
+                driver: bridge
+
+            EOF
+            
+            # 2. Запускаем БД с переменными окружения
+            export POSTGRES_DB=defaultdb
+            export POSTGRES_USER=devuser
+            export POSTGRES_PASSWORD=devpassword
+            
+            echo "Starting databases..."
+            docker-compose -f docker-compose-db.yml up -d
+            
+            # 3. Ждем пока БД запустятся и станут здоровыми
+            echo "Waiting for databases to be healthy..."
+            sleep 10
+            
+            # 4. Деплоим микросервисы
+            SERVICES=("authService" "chatService" "messageService" "userService")
+            
+            for service in "${SERVICES[@]}"; do
+              echo "Deploying $service..."
+            
+              # Pull latest image
+              docker pull your-docker-username/$service:dev
+            
+              # Stop and remove old container
+              docker stop $service || true
+              docker rm $service || true
+            
+              # Run new container with environment-specific config
+              docker run -d \
+                --name $service \
+                --network=app \
+                -e SPRING_PROFILES_ACTIVE=dev \
+                -e DB_URL=${{ secrets.DEV_DB_URL }} \
+                -e DB_USERNAME=${{ secrets.DEV_DB_USERNAME }} \
+                -e DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }} \
+                your-docker-username/$service:dev
+            
+              echo "$service deployed successfully"
+            done
+            
+            # Clean up
+            docker image prune -f
+            echo "All services deployed to dev server"
