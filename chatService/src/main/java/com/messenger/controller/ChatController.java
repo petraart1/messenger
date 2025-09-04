@@ -25,19 +25,19 @@ public class ChatController {
     public ChatDto createChat(@Valid @RequestBody ChatCreateDto chat,
                               @AuthenticationPrincipal AuthMemberDto member)
     {
-
+        return null;
     }
 
     @GetMapping
     public List<Chat> getChats(@AuthenticationPrincipal AuthMemberDto member) {
-
+        return null;
     }
 
     @GetMapping("/{chat_id}")
     public Chat getChat(@PathVariable Long chat_id,
                         @AuthenticationPrincipal AuthMemberDto member)
     {
-
+        return null;
     }
 
     @PostMapping("/{chat_id}/members")
@@ -45,7 +45,7 @@ public class ChatController {
                           @RequestBody List<Long> memberIds,
                           @AuthenticationPrincipal AuthMemberDto member)
     {
-
+        return null;
     }
 
     @DeleteMapping("/{chat_id}/members/{user_id}")
@@ -53,6 +53,6 @@ public class ChatController {
                            @PathVariable Long user_id,
                            @AuthenticationPrincipal AuthMemberDto member)
     {
-
+        return;
     }
 }
