@@ -1,0 +1,31 @@
+name: develop ci test pipeline
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: ['authService', 'chatService', 'messageService', 'userService']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Test ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          chmod +x gradlew
+          ./gradlew test
