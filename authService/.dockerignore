@@ -1,0 +1,10 @@
+**/target/
+**/build/
+**/.gradle/
+**/logs/
+**/*.log
+**/out/
+**/node_modules/
+**/.DS_Store
+**/gradlew.bat
+Dockerfile
