@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ 'auth-service', 'chat-service', 'message-service', 'user-service' ]
+        service: ['authService', 'chatService', 'messageService', 'userService']
 
     steps:
       - name: Checkout
@@ -63,7 +63,7 @@ jobs:
       - name: Convert service name for artifact download
         run: |
           SERVICE_NAME=${{ matrix.service }}
-          ARTIFACT_NAME=$(echo "$SERVICE_NAME" | sed 's/Service/-service/')
+          ARTIFACT_NAME=$(echo "$SERVICE_NAME" | sed 's/\([A-Z]\)/-\L\1/g' | sed 's/^-//')
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
 
       - name: Download build artifacts
