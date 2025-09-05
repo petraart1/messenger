@@ -104,7 +104,16 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
 
+
     steps:
+      - name: Copy docker-compose file to server
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.DEV_SERVER_HOST }}
+          username: ${{ secrets.DEV_SERVER_USER }}
+          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          source: "docker-compose-dev.yml"
+
       - name: Deploy to development server
         uses: appleboy/ssh-action@v1.0.0
         with:
