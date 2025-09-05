@@ -1,4 +1,4 @@
-name: develop ci test pipeline
+name: develop ci/cd pipeline
 
 on:
   push:
@@ -42,13 +42,13 @@ jobs:
             name: build-${{ matrix.service }}
             path: ${{ matrix.service }}/build/libs/*.jar
 
-  build-docker-images:
+  build:
     needs: test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ 'authService', 'chatService', 'messageService', 'userService' ]
+        service: [ 'auth-service', 'chat-service', 'message-service', 'user-service' ]
 
     steps:
       - name: Checkout
@@ -75,13 +75,13 @@ jobs:
           context: ./${{ matrix.service }}
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:dev
-            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ lower(matrix.service) }}:dev
+            ${{ secrets.DOCKER_USERNAME }}/${{ lower(matrix.service) }}:${{ github.sha }}
           build-args: |
             JAR_FILE=build/libs/*.jar
 
   deploy:
-    needs: build-docker-images
+    needs: build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: dev
