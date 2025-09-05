@@ -113,6 +113,7 @@ jobs:
           username: ${{ secrets.DEV_SERVER_USER }}
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
           source: "compose-dev.yaml"
+          target: "/home/akela/"
 
       - name: Deploy to development server
         uses: appleboy/ssh-action@v1.0.0
@@ -139,14 +140,14 @@ jobs:
             USER_DB_CONTAINER_NAME=${{ secrets.USER_DB_CONTAINER_NAME }}
             EOF
             
-            docker-compose -f docker-compose-dev.yaml down
+            docker-compose -f compose-dev.yaml down
 
             docker pull ${{ secrets.DOCKER_USERNAME }}/auth-service:dev
             docker pull ${{ secrets.DOCKER_USERNAME }}/chat-service:dev
             docker pull ${{ secrets.DOCKER_USERNAME }}/message-service:dev
             docker pull ${{ secrets.DOCKER_USERNAME }}/user-service:dev
             
-            docker-compose -f docker-compose-dev.yml up -d
+            docker-compose -f compose-dev.yaml up -d
             
             sleep 10
             echo "Deployment status:"
