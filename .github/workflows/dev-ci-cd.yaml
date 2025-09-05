@@ -114,14 +114,6 @@ jobs:
           echo "Content of compose-dev.yaml:"
           cat compose-dev.yaml || echo "File not found!"
 
-      - name: Copy docker-compose file to server
-        uses: appleboy/scp-action@v0.1.3
-        with:
-          host: ${{ secrets.DEV_SERVER_HOST }}
-          username: ${{ secrets.DEV_SERVER_USER }}
-          key: ${{ secrets.DEV_SERVER_SSH_KEY }}
-          source: "./compose-dev.yaml"
-          target: "/home/akela/"
 
       - name: Deploy to development server
         uses: appleboy/ssh-action@v1.0.0
