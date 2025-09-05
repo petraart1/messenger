@@ -140,6 +140,8 @@ jobs:
             CHAT_DB_CONTAINER_NAME=${{ secrets.CHAT_DB_CONTAINER_NAME }}
             MESSAGE_DB_CONTAINER_NAME=${{ secrets.MESSAGE_DB_CONTAINER_NAME }}
             USER_DB_CONTAINER_NAME=${{ secrets.USER_DB_CONTAINER_NAME }}
+            
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOF
             
             docker-compose -f compose-dev.yaml down
