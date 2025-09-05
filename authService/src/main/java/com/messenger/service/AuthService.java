@@ -1,10 +1,7 @@
 package com.messenger.service;
 
-import com.messenger.dto.LoginResponse;
+import com.messenger.dto.*;
 import com.messenger.exception.UserAlreadyExistsException;
-import com.messenger.dto.LoginRequest;
-import com.messenger.dto.RegisterRequest;
-import com.messenger.dto.UserDto;
 import com.messenger.model.User;
 import com.messenger.repository.UserRepository;
 import com.messenger.security.JwtTokenProvider;
@@ -14,7 +11,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -87,6 +83,16 @@ public class AuthService {
                 token,
                 "Bearer"
         );
+    }
+
+    public LogoutResponse logout(LogoutRequest request) {
+        log.debug("Starting logout");
+        return new LogoutResponse();
+    }
+
+    public RefreshResponse refresh(RefreshRequest request) {
+        log.debug("Starting refresh");
+        return new RefreshResponse();
     }
 
     private Optional<User> findUserByIdentifier(LoginRequest request) {

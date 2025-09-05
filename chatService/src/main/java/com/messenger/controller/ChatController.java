@@ -3,8 +3,6 @@ package com.messenger.controller;
 import com.messenger.dto.AuthMemberDto;
 import com.messenger.dto.ChatCreateDto;
 import com.messenger.dto.ChatDto;
-import com.messenger.dto.MemberDto;
-import com.messenger.model.Chat;
 import com.messenger.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,34 +23,39 @@ public class ChatController {
     public ChatDto createChat(@Valid @RequestBody ChatCreateDto chat,
                               @AuthenticationPrincipal AuthMemberDto member)
     {
-        return null;
+        log.info("Create chat: {}", chat);
+        return chatService.createChat(chat, member);
     }
 
     @GetMapping
-    public List<Chat> getChats(@AuthenticationPrincipal AuthMemberDto member) {
-        return null;
+    public List<ChatDto> getChats(@AuthenticationPrincipal AuthMemberDto member) {
+        log.info("Get chats: {}", member);
+        return chatService.getChats(member.id());
     }
 
     @GetMapping("/{chat_id}")
-    public Chat getChat(@PathVariable Long chat_id,
-                        @AuthenticationPrincipal AuthMemberDto member)
+    public ChatDto getChat(@PathVariable("chat_id") Long chatId,
+                           @AuthenticationPrincipal AuthMemberDto member)
     {
-        return null;
+        log.info("Get chat: {}", chatId);
+        return chatService.getChat(chatId);
     }
 
     @PostMapping("/{chat_id}/members")
-    public Chat addMember(@PathVariable Long chatId,
-                          @RequestBody List<Long> memberIds,
-                          @AuthenticationPrincipal AuthMemberDto member)
+    public ChatDto addMembers(@PathVariable("chat_id") Long chatId,
+                              @RequestBody List<Long> memberIds,
+                              @AuthenticationPrincipal AuthMemberDto member)
     {
-        return null;
+        log.info("Add member: {}", member);
+        return chatService.addMembers(chatId, memberIds);
     }
 
     @DeleteMapping("/{chat_id}/members/{user_id}")
-    public void deleteChat(@PathVariable Long chat_id,
-                           @PathVariable Long user_id,
-                           @AuthenticationPrincipal AuthMemberDto member)
+    public ChatDto deleteMember(@PathVariable("chat_id") Long chatId,
+                                @PathVariable("user_id") Long userId,
+                                @AuthenticationPrincipal AuthMemberDto member)
     {
-        return;
+        log.info("Delete member {} from chat {}", userId, chatId);
+        return chatService.deleteMember(chatId, userId);
     }
 }

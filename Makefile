@@ -1,3 +1,7 @@
+.PHONY: test
+
+SERVICES = authService chatService messageService userService
+
 up:
 	docker-compose --env-file=.env up --build
 
@@ -18,3 +22,10 @@ psql-message-db:
 
 psql-user-db:
 	psql -h localhost -U postgres -d messenger -p 5435
+
+test:
+	@for dir in $(SERVICES); do \
+        		echo "🚀 Запуск тестов в $$dir..."; \
+        		(cd $$dir && ./gradlew test --no-daemon --parallel &); \
+        	done; \
+        	wait

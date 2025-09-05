@@ -1,6 +1,6 @@
 spring:
   application:
-    name: authService
+    name: chatService
 
   datasource:
     url: jdbc:postgresql://${CHAT_DB_CONTAINER_NAME}:${DB_PORT}/${POSTGRES_DB}

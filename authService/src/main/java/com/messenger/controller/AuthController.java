@@ -1,11 +1,8 @@
 package com.messenger.controller;
 
-import com.messenger.dto.LoginResponse;
+import com.messenger.dto.*;
 import com.messenger.exception.BadCredentialsException;
 import com.messenger.exception.UserAlreadyExistsException;
-import com.messenger.dto.LoginRequest;
-import com.messenger.dto.RegisterRequest;
-import com.messenger.dto.UserDto;
 import com.messenger.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,5 +51,17 @@ public class AuthController {
             log.error("Error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+
+    @PostMapping("/logout")
+    ResponseEntity<?> logout(@Valid @RequestBody LogoutRequest logoutRequest) {
+        log.info("Logout request: {}", logoutRequest);
+        return null;
+    }
+
+    @PostMapping("/refresh")
+    ResponseEntity<?> refresh(@Valid @RequestBody RefreshRequest refreshRequest) {
+        log.info("Refresh request: {}", refreshRequest);
+        return null;
     }
 }

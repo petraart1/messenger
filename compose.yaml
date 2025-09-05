@@ -99,6 +99,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DB_PORT: ${DB_PORT}
+      AUTH_DB_CONTAINER_NAME: ${AUTH_DB_CONTAINER_NAME}
       JWT_SECRET: ${JWT_SECRET}
 
     ports:
@@ -120,13 +121,14 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DB_PORT: ${DB_PORT}
+      CHAT_DB_CONTAINER_NAME: ${CHAT_DB_CONTAINER_NAME}
       JWT_SECRET: ${JWT_SECRET}
 
     ports:
       - "8081:8080"
 
     depends_on:
-      auth-db:
+      chat-db:
         condition: service_healthy
 
   message:
@@ -141,6 +143,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DB_PORT: ${DB_PORT}
+      MESSAGE_DB_CONTAINER_NAME: ${MESSAGE_DB_CONTAINER_NAME}
       JWT_SECRET: ${JWT_SECRET}
 
     ports:
@@ -162,6 +165,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DB_PORT: ${DB_PORT}
+      USER_DB_CONTAINER_NAME: ${USER_DB_CONTAINER_NAME}
       JWT_SECRET: ${JWT_SECRET}
 
     ports:
