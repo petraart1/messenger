@@ -7,7 +7,7 @@ on:
     branches: [dev]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -29,3 +29,15 @@ jobs:
           cd ${{ matrix.service }}
           chmod +x gradlew
           ./gradlew test
+
+      - name: Build ${{ matrix.service }}
+        run: |
+            cd ${{ matrix.service }}
+            chmod +x gradlew
+            ./gradlew assemble -x test
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+            name: build-${{ matrix.service }}
+            path: ${{ matrix.service }}/build/libs/*.jar
