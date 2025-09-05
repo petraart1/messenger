@@ -75,8 +75,8 @@ jobs:
           context: ./${{ matrix.service }}
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ lower(matrix.service) }}:dev
-            ${{ secrets.DOCKER_USERNAME }}/${{ lower(matrix.service) }}:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:dev
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
           build-args: |
             JAR_FILE=build/libs/*.jar
 
