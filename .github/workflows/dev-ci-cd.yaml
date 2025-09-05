@@ -39,8 +39,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-            name: build-${{ matrix.service }}
-            path: ${{ matrix.service }}/build/libs/*.jar
+          name: build-${{ replace(matrix.service, 'S', '-s') }}
+          path: ${{ matrix.service }}/build/libs/*.jar
 
   build:
     needs: test
@@ -57,7 +57,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ matrix.service }}
+          name: build-${{ replace(matrix.service, 'S', '-s') }}
           path: ${{ matrix.service }}/build/libs/
 
       - name: Set up Docker Buildx
@@ -75,8 +75,8 @@ jobs:
           context: ./${{ matrix.service }}
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:dev
-            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ replace(matrix.service, 'S', '-s') }}:dev
+            ${{ secrets.DOCKER_USERNAME }}/${{ replace(matrix.service, 'S', '-s') }}:${{ github.sha }}
           build-args: |
             JAR_FILE=build/libs/*.jar
 
@@ -200,7 +200,7 @@ jobs:
             sleep 10
             
             # 4. Деплоим микросервисы
-            SERVICES=("authService" "chatService" "messageService" "userService")
+            SERVICES=("auth-service" "chat-service" "message-service" "user-service")
             
             for service in "${SERVICES[@]}"; do
               echo "Deploying $service..."
