@@ -1,5 +1,6 @@
 package com.messenger.security;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -7,10 +8,13 @@ import java.util.Collection;
 import java.util.List;
 
 public class MyUserDetails implements UserDetails {
+    @Getter
+    private final Long id;
 
     private final String username;
 
-    public MyUserDetails(String username) {
+    public MyUserDetails(Long id, String username) {
+        this.id = id;
         this.username = username;
     }
 
@@ -28,4 +32,5 @@ public class MyUserDetails implements UserDetails {
     public String getUsername() {
         return username;
     }
+
 }

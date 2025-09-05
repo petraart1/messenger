@@ -8,12 +8,12 @@ import com.messenger.model.Chat;
 import com.messenger.model.ChatMembers;
 import com.messenger.repository.ChatMembersRepository;
 import com.messenger.repository.ChatRepository;
-import com.messenger.security.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 public class ChatService {
     private final ChatRepository chatRepository;
     private final ChatMembersRepository chatMembersRepository;
-    private final JwtTokenUtil jwtTokenUtil;
 
     public ChatDto createChat(ChatCreateDto chatCreateDto, AuthMemberDto authMemberDto) {
         log.info("Creating chat: {}", chatCreateDto);
@@ -41,8 +40,66 @@ public class ChatService {
             }
         }
 
-        return new ChatDto(chat.getId(), chat.getName(), chat.isGroup(), List.of(new MemberDto(1L, "d", LocalDateTime.now())) ,chat.getCreatedAt());
+        List<ChatMembers> chatMembers = chatMembersRepository.findByChatId(chat.getId());
+        List<MemberDto> memberDtos = chatMembers.stream()
+                .map(m -> new MemberDto(m.getUserId(), "user-" + m.getUserId(), m.getJoinedAt()))
+                .collect(Collectors.toList());
+
+        return new ChatDto(chat.getId(), chat.getName(), chat.isGroup(), memberDtos, chat.getCreatedAt());
     }
+
+    public List<ChatDto> getChats(Long userId) {
+        log.info("Getting chats for user: {}", userId);
+        List<ChatMembers> memberships = chatMembersRepository.findByUserId(userId);
+
+        List<ChatDto> chatDtos = new ArrayList<>();
+        for (ChatMembers membership : memberships) {
+            Chat chat = chatRepository.findById(membership.getChatId()).orElseThrow();
+            List<MemberDto> members = chatMembersRepository.findByChatId(chat.getId())
+                    .stream()
+                    .map(m -> new MemberDto(m.getUserId(), "user-" + m.getUserId(), m.getJoinedAt()))
+                    .toList();
+
+            chatDtos.add(new ChatDto(chat.getId(), chat.getName(), chat.isGroup(), members, chat.getCreatedAt()));
+        }
+        return chatDtos;
+    }
+
+
+    public ChatDto getChat(Long chatId) {
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
+
+        List<MemberDto> members = chatMembersRepository.findByChatId(chatId)
+                .stream()
+                .map(m -> new MemberDto(m.getUserId(), "user-" + m.getUserId(), m.getJoinedAt()))
+                .toList();
+
+        return new ChatDto(chat.getId(), chat.getName(), chat.isGroup(), members, chat.getCreatedAt());
+    }
+
+
+    @Transactional
+    public ChatDto addMembers(Long chatId, List<Long> memberIds) {
+        log.info("Adding members: {}", memberIds);
+        for (Long memberId : memberIds) {
+            addMemberToChat(chatId, memberId);
+        }
+        return getChat(chatId);
+    }
+
+
+    @Transactional
+    public ChatDto deleteMember(Long chatId, Long userId) {
+        log.info("Deleting member: {}", userId);
+        ChatMembers member = chatMembersRepository.findByChatIdAndUserId(chatId, userId)
+                .orElseThrow(() -> new RuntimeException("User not found in chat"));
+
+        chatMembersRepository.delete(member);
+
+        return getChat(chatId);
+    }
+
 
     private void addMemberToChat(Long chatId, Long userId) {
         if (chatMembersRepository.existsByChatIdAndUserId(chatId, userId)) {
@@ -57,26 +114,4 @@ public class ChatService {
         chatMembersRepository.save(member);
     }
 
-    private ChatDto getChatWithMembers(Chat chat) {
-        List<ChatMembers> members = chatMembersRepository.findByChatId(chat.getId());
-        List<MemberDto> memberDtos = members.stream()
-                .map()
-                .collect(Collectors.toList());
-
-        return new ChatDto(
-                chat.getId(),
-                chat.getName(),
-                chat.isGroup(),
-                memberDtos,
-                chat.getCreatedAt()
-        );
-    }
-
-    private MemberDto toMemberDto(ChatMembers member) {
-        return new MemberDto(
-                member.getUserId(),
-                member.getUsername(),
-                member.getJoinedAt()
-        );
-    }
 }

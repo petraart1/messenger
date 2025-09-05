@@ -1,30 +1,36 @@
-FROM eclipse-temurin:21-jdk-alpine as builder
-
-RUN apk add --no-cache bash
+# === Stage 1: Сборка с кэшированием ===
+FROM eclipse-temurin:21-jdk AS builder
 
 WORKDIR /app
 
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
-COPY src src
+# Копируем конфигурацию Gradle
+COPY gradle ./gradle
+COPY settings.gradle* ./
+COPY build.gradle* ./
+COPY gradlew ./
 
 RUN chmod +x gradlew
 
-RUN ./gradlew clean build -x test --no-daemon
+# Кэшируем зависимости
+RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle \
+    ./gradlew dependencies --no-daemon --refresh-dependencies
 
-FROM eclipse-temurin:21-jre-alpine
+# Копируем исходники
+COPY src ./src
+
+# Собираем JAR (без тестов)
+RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle \
+    ./gradlew build -x test --no-daemon
+
+# === Stage 2: Продакшен-образ (лёгкий) ===
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
-
+# Копируем JAR
 COPY --from=builder /app/build/libs/*.jar app.jar
-
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError"
 
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+# Запуск с ускорением инициализации
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

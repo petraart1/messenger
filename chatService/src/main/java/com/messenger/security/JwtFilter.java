@@ -1,3 +1,4 @@
+/*
 package com.messenger.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
@@ -31,12 +32,14 @@ public class JwtFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
+        Long userId = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
             try {
                 username = jwtTokenUtil.getUsernameFromToken(token);
-                log.debug("Extracted username from token: {}", username);
+                userId = jwtTokenUtil.getUserIdFromToken(token);
+                log.debug("Extracted from token - username: {}, userId: {}", username, userId);
             } catch (IllegalArgumentException e) {
                 System.out.println("Unable to get JWT Token");
                 log.warn("Unable to get JWT Token: {}", e.getMessage());
@@ -49,7 +52,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(new MyUserDetails(username), null, List.of());
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(new MyUserDetails(userId, username), null, List.of());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
             log.debug("Set authentication for user: {}", username);
@@ -58,3 +61,4 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+*/
