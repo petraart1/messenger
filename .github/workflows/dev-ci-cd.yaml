@@ -112,7 +112,7 @@ jobs:
           host: ${{ secrets.DEV_SERVER_HOST }}
           username: ${{ secrets.DEV_SERVER_USER }}
           key: ${{ secrets.DEV_SERVER_SSH_KEY }}
-          source: "docker-compose-dev.yml"
+          source: "compose-dev.yaml"
 
       - name: Deploy to development server
         uses: appleboy/ssh-action@v1.0.0
