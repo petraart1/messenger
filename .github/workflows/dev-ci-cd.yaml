@@ -222,9 +222,29 @@ jobs:
             
             for service in "${SERVICES[@]}"; do
               echo "Deploying $service..."
+              
+              case $service in
+                "auth-service")
+                PORT=8081
+                ;;
+                "chat-service")
+                PORT=8082
+                ;;
+                "message-service")
+                PORT=8083
+                ;;
+                "user-service")
+                PORT=8084
+                ;;
+                *)
+                PORT=8080
+                ;;
+              esac
             
               # Pull latest image
               docker pull ${{ secrets.DOCKER_USERNAME }}/$service:dev
+              docker stop $service || true
+              docker rm $service || true
             
               # Stop and remove old container
               docker stop $service || true
@@ -234,13 +254,14 @@ jobs:
               docker run -d \
                 --name $service \
                 --network=app \
+                -p $PORT:8080
                 -e SPRING_PROFILES_ACTIVE=dev \
                 -e DB_URL=${{ secrets.DEV_DB_URL }} \
                 -e DB_USERNAME=${{ secrets.DEV_DB_USERNAME }} \
                 -e DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }} \
                 ${{ secrets.DOCKER_USERNAME }}/$service:dev
             
-              echo "$service deployed successfully"
+              echo "$service deployed on port $PORT"
             done
             
             # Clean up
