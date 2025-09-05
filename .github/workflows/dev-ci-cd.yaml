@@ -132,6 +132,8 @@ jobs:
           script: |
             #!/bin/bash
             echo "Starting deployment to dev server"
+            
+            curl -L -o compose-dev.yaml "https://raw.githubusercontent.com/petraart1/messenger/dev/compose-dev.yaml"
 
             cat > .env << EOF
             DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
