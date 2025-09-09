@@ -54,7 +54,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ['authService', 'chatService', 'messageService', 'userService']
+        service:
+          [
+            'authService',
+                  'chatService',
+                  'messageService',
+                  'userService',
+                  'nginx',
+                  'prometheus',
+                  'node_exporter',
+                  'grafana'
+          ]
 
     steps:
       - name: Checkout
@@ -103,7 +113,6 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: dev
-
 
     steps:
       - name: Verify compose file exists

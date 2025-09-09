@@ -1,36 +1,59 @@
-# === Stage 1: Сборка с кэшированием ===
-FROM eclipse-temurin:21-jdk AS builder
+#FROM eclipse-temurin:21-jdk AS builder
+#
+#WORKDIR /app
+#
+#COPY gradle ./gradle
+#COPY settings.gradle* ./
+#COPY build.gradle* ./
+#COPY gradlew ./
+#
+#RUN chmod +x gradlew
+#
+#RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle \
+#    ./gradlew dependencies --no-daemon --refresh-dependencies
+#
+#COPY src ./src
+#
+#RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle \
+#    ./gradlew build -x test --no-daemon
+#
+#FROM eclipse-temurin:21-jre
+#
+#WORKDIR /app
+#
+#COPY --from=builder /app/build/libs/*.jar app.jar
+#
+#EXPOSE 8080
+#
+#ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+
+FROM eclipse-temurin:21-jdk-alpine as builder
+
+RUN apk add --no-cache bash
 
 WORKDIR /app
 
-# Копируем конфигурацию Gradle
-COPY gradle ./gradle
-COPY settings.gradle* ./
-COPY build.gradle* ./
-COPY gradlew ./
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+COPY src src
 
 RUN chmod +x gradlew
 
-# Кэшируем зависимости
-RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle \
-    ./gradlew dependencies --no-daemon --refresh-dependencies
+RUN ./gradlew clean build -x test --no-daemon
 
-# Копируем исходники
-COPY src ./src
-
-# Собираем JAR (без тестов)
-RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle \
-    ./gradlew build -x test --no-daemon
-
-# === Stage 2: Продакшен-образ (лёгкий) ===
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Копируем JAR
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
 COPY --from=builder /app/build/libs/*.jar app.jar
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError"
 
 EXPOSE 8080
 
-# Запуск с ускорением инициализации
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

@@ -7,7 +7,12 @@ create table chats (
    is_group boolean not null default false,
    created_at timestamp not null
 );
---rollback drop table chats
+create index idx_chats_is_group on chats (is_group);
+create index idx_chats_created_at on chats (created_at desc);
+
+-- rollback drop index if exists idx_chats_created_at;
+-- rollback drop index if exists idx_chats_is_group;
+-- rollback drop table if exists chats cascade;
 
 
 --changeset Artyom:2
@@ -18,15 +23,19 @@ create table chat_members (
       joined_at timestamp not null,
       constraint uk_chat_members_chat_user unique (chat_id, user_id)
 );
---rollback drop table chat_members
+-- rollback drop table if exists chat_members cascade;
 
---changeset Artyom:3
 alter table chat_members add constraint fk_chat_members_chat
 foreign key (chat_id) references chats(id) on delete cascade;
--- rollback alter table chat_members drop constraint fk_chat_members_chat;
+-- rollback alter table chat_members drop constraint if exists fk_chat_members_chat;
 
---changeset Artyom:4
-create index idx_chat_members_chat_id on chat_members(chat_id);
-create index idx_chat_members_user_id on chat_members(user_id);
--- rollback drop index idx_chat_members_user_id;
--- rollback drop index idx_chat_members_chat_id;
+
+-- changeset Artyom:4
+create index idx_chat_members_chat_id on chat_members (chat_id);
+create index idx_chat_members_user_id on chat_members (user_id);
+
+create index idx_chat_members_joined_at on chat_members (joined_at desc);
+
+-- rollback drop index if exists idx_chat_members_joined_at;
+-- rollback drop index if exists idx_chat_members_user_id;
+-- rollback drop index if exists idx_chat_members_chat_id;
