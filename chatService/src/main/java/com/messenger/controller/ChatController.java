@@ -7,6 +7,8 @@ import com.messenger.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +50,19 @@ public class ChatController {
     {
         log.info("Add member: {}", member);
         return chatService.addMembers(chatId, memberIds);
+    }
+
+    @GetMapping("/{chat_id}/members/{user_id}")
+    public ResponseEntity<Boolean> checkMember(@PathVariable("chat_id") Long chatId,
+                                               @PathVariable("user_id") Long userId,
+                                               @AuthenticationPrincipal AuthMemberDto member)
+    {
+        log.info("Check member: {}", member);
+        /*if (!chatService.checkMembership(chatId, member.id())) {
+            throw new AccessDeniedException("Access denied");
+        }*/
+
+        return ResponseEntity.ok(chatService.checkMembership(chatId, userId));
     }
 
     @DeleteMapping("/{chat_id}/members/{user_id}")

@@ -6,10 +6,13 @@
 На данный момент реализованы два сервиса:
 - **Auth Service** – регистрация и авторизация пользователей.
 - **Chat Service** – управление чатами и участниками.
+- **Message Service** – отправка сообщений.
+- **User Service** – информация о пользователях.
 
 Проект находится на стадии **MVP**:
 - Есть базовая аутентификация через JWT.
 - Чаты можно создавать, получать, добавлять и удалять участников.
+- Можно отправлять сообщения
 - Подняты docker-контейнеры для каждого сервиса.
 
 ## ⚙️ Подготовка
@@ -67,10 +70,10 @@ make test
 ```
 
 ## 🌐 Доступ к сервисам
-- Auth Service → `http://localhost:8081`
-- Chat Service → `http://localhost:8082`
-- Message Service → (будет реализован)
-- User Service → (будет реализован)
+- Auth Service → `http://localhost:8080`
+- Chat Service → `http://localhost:8081`
+- Message Service → `http://localhost:8082`
+- User Service → `http://localhost:8083`
 
 ## 📦 Структура проекта
 
@@ -80,17 +83,13 @@ messenger/
 ├─ chatService/
 ├─ messageService/
 ├─ userService/
-├─ docker-compose.yml
+├─ compose.yaml
 ├─ Makefile
-├─ .env
-└─ docs/            ← Документация сервисов
+└─ .env
 ```
 
 ## 📄 Документация
 
-Документация каждого сервиса доступна в формате Markdown в папке `docs/`:
+Документация каждого сервиса доступна в формате swagger:
 
-- [Auth Service](docs/auth.md)
-- [Chat Service](docs/chat.md)
-
-Swagger/OpenAPI документация будет подключена позже.
+- [Documentation](documentation.yaml)

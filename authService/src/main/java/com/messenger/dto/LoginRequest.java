@@ -35,4 +35,13 @@ public record LoginRequest(
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+                "username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='[PROTECTED]'" +
+                '}';
+    }
 }

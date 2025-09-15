@@ -1,0 +1,546 @@
+openapi: 3.0.3
+info:
+  title: Messenger Microservices API
+  description: |
+    API для мессенджера, разделённого на 4 независимых микросервиса.
+    Все сервисы работают изолированно, взаимодействие между ними пока не реализовано.
+    Доступ ко всем эндпоинтам осуществляется через API Gateway (nginx).
+  version: 1.0.0
+servers:
+  - url: https://your-domain.com/api
+    description: Продакшен через API Gateway
+  - url: http://localhost/api/v1
+    description: Локальная разработка (прямой доступ к сервисам)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth Service
+    description: Сервис аутентификации и регистрации пользователей. Работает автономно.
+  - name: Chat Service
+    description: Управление чатами и участниками. Не зависит от других сервисов.
+  - name: Message Service
+    description: Отправка и получение сообщений. Не зависит от других сервисов.
+  - name: User Service
+    description: Получение информации о пользователях. Работает изолированно.
+
+paths:
+
+  # ============= AUTH SERVICE =============
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth Service
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Пользователь уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth Service
+      summary: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Auth Service
+      summary: Выход из системы (заглушка — не реализовано)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '200':
+          description: Успешный выход (заглушка)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '501':
+          description: Метод не реализован
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Auth Service
+      summary: Обновление токена (заглушка — не реализовано)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Пока пустой — в будущем будет содержать refresh_token
+      responses:
+        '200':
+          description: Токен обновлён (заглушка)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '501':
+          description: Метод не реализован
+
+
+  # ============= CHAT SERVICE =============
+  /api/v1/chat:
+    post:
+      tags:
+        - Chat Service
+      summary: Создать новый чат
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCreateDto'
+      responses:
+        '200':
+          description: Чат создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+    get:
+      tags:
+        - Chat Service
+      summary: Получить список чатов текущего пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список чатов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatDto'
+
+  /api/v1/chat/{chat_id}:
+    get:
+      tags:
+        - Chat Service
+      summary: Получить информацию о чате по ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: chat_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Информация о чате
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+        '404':
+          description: Чат не найден
+
+  /api/v1/chat/{chat_id}/members:
+    post:
+      tags:
+        - Chat Service
+      summary: Добавить участников в чат
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: chat_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+      responses:
+        '200':
+          description: Чат с обновлённым списком участников
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+        '400':
+          description: Участник уже в чате
+
+  /api/v1/chat/{chat_id}/members/{user_id}:
+    delete:
+      tags:
+        - Chat Service
+      summary: Удалить участника из чата
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: chat_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Чат с обновлённым списком участников
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+        '404':
+          description: Участник не найден в чате
+
+
+  # ============= MESSAGE SERVICE =============
+  /api/v1/message:
+    post:
+      tags:
+        - Message Service
+      summary: Отправить сообщение
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreateDto'
+      responses:
+        '200':
+          description: Сообщение отправлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDto'
+
+  /api/v1/message/{chat_id}:
+    get:
+      tags:
+        - Message Service
+      summary: Получить все сообщения чата
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: chat_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Список сообщений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageDto'
+
+
+  # ============= USER SERVICE =============
+  /api/v1/user/{id}:
+    get:
+      tags:
+        - User Service
+      summary: Получить пользователя по ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Информация о пользователе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Пользователь не найден
+
+  /api/v1/user:
+    get:
+      tags:
+        - User Service
+      summary: Получить список всех пользователей
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # === AUTH ===
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "john_doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          minLength: 6
+          example: "password123"
+
+    LoginRequest:
+      type: object
+      required:
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "john_doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          minLength: 6
+          example: "password123"
+      description: Укажите ТОЛЬКО username ИЛИ email, но не оба сразу.
+
+    LoginResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.x.x"
+        tokenType:
+          type: string
+          example: "Bearer"
+
+    LogoutRequest:
+      type: object
+      description: Пустой объект (заглушка)
+
+    LogoutResponse:
+      type: object
+      description: Пустой объект (заглушка)
+
+    RefreshRequest:
+      type: object
+      description: Пустой объект (заглушка)
+
+    RefreshResponse:
+      type: object
+      description: Пустой объект (заглушка)
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    # === USER ===
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # === CHAT ===
+    ChatCreateDto:
+      type: object
+      required:
+        - name
+        - is_group
+        - member_ids
+      properties:
+        name:
+          type: string
+          example: "Project Chat"
+        is_group:
+          type: boolean
+          example: true
+        member_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [1, 2, 3]
+
+    ChatDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        is_group:
+          type: boolean
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDto'
+        created_at:
+          type: string
+          format: date-time
+
+    MemberDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+          example: "user-123" # временная заглушка, будет заменена после интеграции с UserService
+        joined_at:
+          type: string
+          format: date-time
+
+    AuthMemberDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+
+    # === MESSAGE ===
+    MessageCreateDto:
+      type: object
+      required:
+        - chatId
+        - content
+      properties:
+        chatId:
+          type: integer
+          format: int64
+          example: 123
+        content:
+          type: string
+          example: "Hello, world!"
+
+    MessageDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        chat_id:
+          type: integer
+          format: int64
+        sender_id:
+          type: integer
+          format: int64
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time

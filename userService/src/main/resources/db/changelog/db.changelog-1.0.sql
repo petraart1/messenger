@@ -8,7 +8,7 @@ create table users (
     password varchar(100) not null,
     created_at timestamp not null,
     updated_at timestamp not null,
-    is_active boolean not null default true
+    --is_active boolean not null default true
 );
 --rollback drop table users
 
