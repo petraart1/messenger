@@ -38,3 +38,11 @@ management:
   endpoint:
     prometheus:
       enabled: true
+
+user:
+  service:
+    url: ${USER_CONTAINER_URL}
+
+message:
+  service:
+    url: ${MESSAGE_CONTAINER_URL}

@@ -31,9 +31,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        /*.requestMatchers("/api/v1/message/healthcheck").permitAll()
+                        /*.requestMatchers("/api/v1/user/healthcheck").permitAll()
                         .requestMatchers("/actuator/**").permitAll()*/
-                        .requestMatchers("/*").permitAll()
+                        .requestMatchers("api/v1/user/**").denyAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -17,4 +17,12 @@ public record RegisterRequest(
         @Size(min = 6, message = "Password must be at least 6 characters")
         String password
 ) {
+        @Override
+        public String toString() {
+                return "RegisterRequest{" +
+                        "username='" + username + '\'' +
+                        ", email='" + email + '\'' +
+                        ", password='[PROTECTED]'" +
+                        '}';
+        }
 }

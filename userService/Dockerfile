@@ -8,11 +8,14 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
-COPY src src
 
 RUN chmod +x gradlew
 
-RUN ./gradlew clean build -x test --no-daemon
+RUN ./gradlew --write-locks dependencies --no-daemon || true
+
+COPY src src
+
+RUN ./gradlew assemble -x test --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 

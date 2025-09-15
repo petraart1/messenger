@@ -23,10 +23,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        log.info("Register request: {}", registerRequest);
+        log.info("Register request for username: {}", registerRequest.username());
         try {
             UserDto user = authService.register(registerRequest);
-            log.info("User registered: {}", user);
+            log.info("User registered with id: {}", user.id());
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (UserAlreadyExistsException e) {
             log.info("User already exists: {}", e.getMessage());

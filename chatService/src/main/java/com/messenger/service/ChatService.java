@@ -28,9 +28,10 @@ public class ChatService {
         log.info("Creating chat: {}", chatCreateDto);
         Chat chat = chatRepository.save(
                 Chat.builder()
-                .name(chatCreateDto.name())
-                .isGroup(chatCreateDto.isGroup())
-                .build());
+                        .name(chatCreateDto.name())
+                        .isGroup(chatCreateDto.isGroup())
+                        .membersCount(chatCreateDto.memberIds().size())
+                        .build());
 
         addMemberToChat(chat.getId(), authMemberDto.id());
 
@@ -65,8 +66,8 @@ public class ChatService {
         return chatDtos;
     }
 
-
     public ChatDto getChat(Long chatId) {
+        // TODO: добавить обращение к сервису для получения пользователей
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new RuntimeException("Chat not found"));
 
@@ -78,16 +79,25 @@ public class ChatService {
         return new ChatDto(chat.getId(), chat.getName(), chat.isGroup(), members, chat.getCreatedAt());
     }
 
-
     @Transactional
     public ChatDto addMembers(Long chatId, List<Long> memberIds) {
         log.info("Adding members: {}", memberIds);
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
+
+        chat.setGroup(false); // bug
+        chatRepository.save(chat);
+
+        if (!chat.isGroup()) {
+            throw new IllegalStateException("Cannot add members to a personal chat");
+        }
+
         for (Long memberId : memberIds) {
             addMemberToChat(chatId, memberId);
         }
+
         return getChat(chatId);
     }
-
 
     @Transactional
     public ChatDto deleteMember(Long chatId, Long userId) {
@@ -100,18 +110,20 @@ public class ChatService {
         return getChat(chatId);
     }
 
+    public Boolean checkMembership(Long chatId, Long userId) {
+        log.info("Checking if member: {}", userId);
+        return chatMembersRepository.existsByChatIdAndUserId(chatId, userId);
+    }
 
     private void addMemberToChat(Long chatId, Long userId) {
         if (chatMembersRepository.existsByChatIdAndUserId(chatId, userId)) {
             throw new IllegalArgumentException("User already in chat");
         }
 
-        ChatMembers member = ChatMembers.builder()
+        chatMembersRepository.save(ChatMembers.builder()
                 .chatId(chatId)
                 .userId(userId)
-                .build();
-
-        chatMembersRepository.save(member);
+                .build());
     }
 
 }
